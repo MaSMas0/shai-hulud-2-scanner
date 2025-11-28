@@ -178,14 +178,32 @@ function getSearchPaths() {
     const home = os.homedir();
     const platform = os.platform();
 
-    // A. Active Global
+    // A. Active Global (NPM)
     try {
         const globalPrefix = execSync('npm root -g').toString().trim();
         paths.push(globalPrefix);
         console.log(`    > [NPM] Active Global: ${globalPrefix}`);
     } catch(e) {}
 
-    // B. NVM Deep Scan (Windows Fix Applied)
+    // B. BUN Support (NEW)
+    // Bun standard location is ~/.bun/install/
+    const bunBase = path.join(home, '.bun', 'install');
+    
+    // 1. Bun Global Modules (Actual installed packages)
+    const bunGlobal = path.join(bunBase, 'global', 'node_modules');
+    if (fs.existsSync(bunGlobal)) {
+        paths.push(bunGlobal);
+        console.log(`    > [BUN] Global Modules: ${bunGlobal}`);
+    }
+
+    // 2. Bun Cache (Downloaded artifacts)
+    const bunCache = path.join(bunBase, 'cache');
+    if (fs.existsSync(bunCache)) {
+        paths.push(bunCache);
+        console.log(`    > [BUN] Global Cache: ${bunCache}`);
+    }
+
+    // C. NVM Deep Scan (Windows Fix Applied)
     let nvmRoot = null;
     
     if (platform === 'win32') {
@@ -231,10 +249,10 @@ function getSearchPaths() {
             console.log(`    > [NVM] Error reading versions: ${e.message}`);
         }
     } else {
-        console.log(`    > [NVM] Not detected (Environment variable NVM_HOME missing?)`);
+        console.log(`    > [NVM] Not detected.`);
     }
 
-    // C. Yarn Specifics
+    // D. Yarn Specifics
     if (platform === 'darwin') {
         const yMac = path.join(home, 'Library/Caches/Yarn');
         if (fs.existsSync(yMac)) {
@@ -259,7 +277,7 @@ function getSearchPaths() {
         }
     }
     
-    // D. Generic Caches
+    // E. Generic Caches
     const yCache = path.join(home, platform === 'win32' ? 'AppData/Local/Yarn/Cache' : '.cache/yarn');
     if (fs.existsSync(yCache)) {
         paths.push(yCache);
