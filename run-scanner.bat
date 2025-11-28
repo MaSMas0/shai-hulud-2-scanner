@@ -13,7 +13,7 @@ if %errorlevel% neq 0 (
 :: 2. Run the scanner
 :: %* passes all arguments (like --upload) to the node script
 echo [*] Launching Scanner...
-node "%~dp0scan-shai.js" %*
+node "%~dp0scan.js" %*
 
 echo.
 echo ========================================================
