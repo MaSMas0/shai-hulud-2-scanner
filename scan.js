@@ -63,8 +63,13 @@ function getUserInfo() {
 
     try { info.gitName = execSync('git config user.name').toString().trim(); } catch (e) {}
     try { info.gitEmail = execSync('git config user.email').toString().trim(); } catch (e) {}
+    try { 
+        const npmWhoami = execSync('npm whoami', { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim();
+        if (npmWhoami) info.npmUser = npmWhoami;
+    } catch (e) {}
     
     console.log(`    > User: ${info.gitName} <${info.gitEmail}>`);
+    console.log(`    > NPM User: ${info.npmUser}`);
     console.log(`    > Host: ${info.hostname} (${info.platform})`);
     return info;
 }
@@ -478,11 +483,11 @@ function checkLockfile(lockPath, badPackages, type) {
 // --- 6. Reporting ---
 function generateReport(userInfo) {
     console.log(`\n${colors.cyan}[5/5] Generating Report...${colors.reset}`);
-    let csvContent = `Timestamp,User,Email,Issue_Type,Package,Version,Location,Details\n`;
+    let csvContent = `Timestamp,Hostname,Git_User,Git_Email,NPM_User,Platform,Issue_Type,Package,Version,Location,Details\n`;
     const now = new Date().toISOString();
     
     detectedIssues.forEach(issue => {
-        csvContent += `"${now}","${userInfo.gitName}","${userInfo.gitEmail}","${issue.type}","${issue.package}","${issue.version}","${issue.location}","${issue.details || ''}"\n`;
+        csvContent += `"${now}","${userInfo.hostname}","${userInfo.gitName}","${userInfo.gitEmail}","${userInfo.npmUser}","${userInfo.platform}","${issue.type}","${issue.package}","${issue.version}","${issue.location}","${issue.details || ''}"\n`;
     });
 
     fs.writeFileSync(REPORT_FILE, csvContent);
