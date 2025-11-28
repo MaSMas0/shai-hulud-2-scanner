@@ -22,30 +22,44 @@ READ THIS FOR MORE INFO: https://www.wiz.io/blog/shai-hulud-2-0-ongoing-supply-c
 ## 🛠️ Installation
 
 1.  Download `scan.js` to a centralized folder.
-2.  (Optional) Edit the configuration at the top of the file to add your API endpoint:
-    ```javascript
-    const UPLOAD_API_URL = 'https://your-lambda-url...';
-    const API_KEY = 'your-secure-key';
-    ```
+2.  Run it immediately — no installation needed!
 
 ## 🏃Usage
 
 You can run the script directly with Node, or use the provided helper scripts.
 
 ### Basic Scan
-Scans system caches (npm, Yarn, pnpm, NVM) and the current directory.
+
+Scans system caches (npm, Yarn, pnpm, NVM) and the current directory. **Generates a local CSV report only.**
 
     node scan.js
 
 ### Scan Specific Directory
+
 Pass a path to scan a specific project or drive location.
 
     node scan.js C:\Projects\MyApp
 
-### Scan & Upload Report
-If you want to generate the CSV locally without sending it to the API, use the flag:
+### Optional: Organization Reporting
 
+**For companies/organizations only:** If you want to centrally aggregate scan results across multiple machines, you can configure automatic report uploads:
+
+1. Edit the configuration at the top of `scan.js`:
+
+    ```javascript
+    const UPLOAD_API_URL = 'https://your-company-api.example.com/upload';
+    const API_KEY = 'your-secure-api-key';
+    ```
+
+2. Run the scan normally — reports will be uploaded automatically.
+
+3. To disable uploads and only generate local CSV:
+
+    ```bash
     node scan.js --no-upload
+    ```
+
+> **Note:** By default, reports are saved locally as `shai-hulud-report.csv`. No data is uploaded unless you explicitly configure an API endpoint.
 
 ----------------------------------------------------------------
 
@@ -65,3 +79,5 @@ The tool categorizes findings into five types:
 
 This tool is provided "as is" to assist in detection. It relies on public IOCs from Wiz Research. False negatives are possible if the malware authors change file names or package versions. Always perform manual verification on critical systems.
 
+## Contributing
+Contributions are welcome! Please submit issues or pull requests on the GitHub repository.
