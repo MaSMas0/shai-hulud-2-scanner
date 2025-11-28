@@ -6,18 +6,22 @@ READ THIS FOR MORE INFO: https://www.wiz.io/blog/shai-hulud-2-0-ongoing-supply-c
 
 ## 🚀 Features
 
-* No npm install required. Zero dependencies. Audit the code in 1 minute.
-* Zero Dependencies: Runs on standard Node.js (v14+). No 'npm install' required.
-* Deep NVM Support: Automatically detects NVM installations (Windows/macOS/Linux) and scans inside every installed Node version.
-* Forensic Scan: Checks for physical malware files (setup_bun.js, bun_environment.js) regardless of version numbers.
-* Metadata Scan: Compares installed packages against the live Wiz.io IOC CSV list.
-* Ghost Detection: Alerts on empty/broken directories that match target package names (potential failed malware installs).
-* **Reporting:** Generates a CSV report and **automatically uploads** it to the security API.
+* **Zero Dependencies:** Runs on standard Node.js (v14+). No 'npm install' required. Audit the code in 1 minute.
+* **Dual Threat Intelligence:** Automatically syncs with two IOC sources:
+  * [Wiz Research](https://github.com/wiz-sec-public/wiz-research-iocs) - Official Shai-Hulud 2.0 packages (CSV)
+  * [Hemachandsai Malicious Packages](https://github.com/hemachandsai/shai-hulud-malicious-packages) - Extended denylist (JSON)
+* **Deep NVM Support:** Automatically detects NVM installations (Windows/macOS/Linux) and scans inside every installed Node version.
+* **Forensic Scan:** Checks for physical malware files (setup_bun.js, bun_environment.js) regardless of version numbers.
+* **Metadata Scan:** Validates installed packages against live threat intelligence feeds.
+* **Ghost Detection:** Alerts on empty/broken directories that match target package names (potential failed malware installs).
+* **Enterprise Reporting:** Generates a CSV report with optional centralized upload capability for organizations.
   
 ## 📋 Prerequisites
 
 * Node.js: Installed and available in your PATH.
-* Internet Connection: Required to fetch the latest IOC list from GitHub.
+* Internet Connection: Required to fetch the latest IOC lists from:
+  * Wiz Research IOC repository
+  * Hemachandsai malicious packages database
 
 ## 🛠️ Installation
 

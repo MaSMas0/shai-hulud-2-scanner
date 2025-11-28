@@ -10,7 +10,7 @@
  * - Multi-layer Detection: Forensic file scanning, metadata validation, and behavioral analysis
  * - Cross-Platform Support: Windows, macOS, Linux with native NVM integration
  * - Zero Dependencies: Self-contained scanner requiring only Node.js runtime
- * - Threat Intelligence: Auto-syncs with Wiz Research IOC database
+ * - Threat Intelligence: Auto-syncs with Wiz Research IOC database and Hemachandsai malicious package list
  * - Enterprise Reporting: Optional centralized report aggregation for organizations
  * 
  * Detection Methods:
@@ -29,7 +29,10 @@ const { execSync } = require('child_process');
 
 // --- CONFIGURATION ---
 const REPORT_FILE = 'shai-hulud-report.csv';
-const IOC_URL = 'https://raw.githubusercontent.com/wiz-sec-public/wiz-research-iocs/main/reports/shai-hulud-2-packages.csv';
+// Source 1: Wiz Research - CSV
+const IOC_CSV_URL = 'https://raw.githubusercontent.com/wiz-sec-public/wiz-research-iocs/main/reports/shai-hulud-2-packages.csv';
+// Source 2: Hemachandsai Malicious Packages
+const IOC_JSON_URL = 'https://raw.githubusercontent.com/hemachandsai/shai-hulud-malicious-packages/main/malicious_npm_packages.json';
 
 // API Configuration
 const UPLOAD_API_URL = 'https://YOUR-LAMBDA-URL.lambda-url.us-east-1.on.aws/'; 
@@ -66,50 +69,103 @@ function getUserInfo() {
     return info;
 }
 
-// --- 2. Fetch IOCs (Robust Parsing) ---
-async function fetchIOCs() {
-    console.log(`\n${colors.cyan}[2/5] Downloading Threat Intelligence (IOCs)...${colors.reset}`);
+// --- 2. Threat Intelligence (Dual Feed) ---
+async function fetchThreats() {
+    console.log(`\n${colors.cyan}[2/5] Downloading Threat Intelligence (Dual Feed)...${colors.reset}`);
+    
+    try {
+        const [wizData, jsonData] = await Promise.allSettled([
+            fetchWizCSV(),
+            fetchMaliciousJSON()
+        ]);
+
+        const badPackages = {};
+        let count = 0;
+
+        // Process Source 1 (Wiz CSV)
+        if (wizData.status === 'fulfilled') {
+            for (const [pkg, vers] of Object.entries(wizData.value)) {
+                if (!badPackages[pkg]) badPackages[pkg] = [];
+                badPackages[pkg].push(...vers);
+            }
+            console.log(`    > [Source 1] Wiz.io: Loaded CSV data.`);
+        } else {
+            console.log(`${colors.red}    > [Source 1] Failed: ${wizData.reason}${colors.reset}`);
+        }
+
+        // Process Source 2 (Hemachandsai JSON)
+        if (jsonData.status === 'fulfilled') {
+            for (const [pkg, vers] of Object.entries(jsonData.value)) {
+                if (!badPackages[pkg]) badPackages[pkg] = [];
+                // If versions is empty [], it means ALL versions are bad -> Add Wildcard '*'
+                if (vers.length === 0) {
+                    if (!badPackages[pkg].includes('*')) badPackages[pkg].push('*');
+                } else {
+                    badPackages[pkg].push(...vers);
+                }
+            }
+            console.log(`    > [Source 2] Hemachandsai: Loaded JSON denylist.`);
+        } else {
+            console.log(`${colors.red}    > [Source 2] Failed: ${jsonData.reason}${colors.reset}`);
+        }
+
+        // Clean duplicates
+        for (const pkg in badPackages) {
+            badPackages[pkg] = [...new Set(badPackages[pkg])];
+            count++;
+        }
+
+        console.log(`    > Total Threat Database: ${count} unique packages targetted.`);
+        return badPackages;
+    } catch (e) {
+        console.error("Critical Error fetching feeds:", e);
+        return {};
+    }
+}
+
+// Helper: Fetch Wiz CSV
+function fetchWizCSV() {
     return new Promise((resolve, reject) => {
-        https.get(IOC_URL, (res) => {
+        https.get(IOC_CSV_URL, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
                 const lines = data.split('\n').filter(l => l.trim() !== '');
-                const badPackages = {};
-                
-                // Determine start index (skip header if present)
+                const result = {};
                 const startIdx = lines[0].toLowerCase().includes('package') ? 1 : 0;
-                
                 for (let i = startIdx; i < lines.length; i++) {
-                    // Split by comma
                     const parts = lines[i].split(',');
-                    
                     if (parts.length >= 2) {
-                        // CLEANING LOGIC:
-                        // 1. Remove quotes (") and (')
-                        // 2. Trim whitespace
                         const rawName = parts[0].replace(/["']/g, '').trim();
-                        
-                        // 3. Clean Version: Remove quotes, =, <, >, v, and spaces
-                        //    Converts "= 3.16.26" -> "3.16.26"
                         const rawVer = parts[1].replace(/["'=<>v\s]/g, '');
-
                         if (rawName && rawVer) {
-                            if (!badPackages[rawName]) badPackages[rawName] = [];
-                            badPackages[rawName].push(rawVer);
+                            if (!result[rawName]) result[rawName] = [];
+                            result[rawName].push(rawVer);
                         }
                     }
                 }
-                
-                const count = Object.keys(badPackages).length;
-                console.log(`    > Loaded ${count} target packages from Wiz Research.`);
-                
-                // // DEBUG: Print one to prove it worked
-                // if (badPackages['uniswap-smart-order-router']) {
-                //      console.log(`      [Debug] Parsed 'uniswap-smart-order-router' versions: ${JSON.stringify(badPackages['uniswap-smart-order-router'])}`);
-                // }
+                resolve(result);
+            });
+        }).on('error', reject);
+    });
+}
 
-                resolve(badPackages);
+// Helper: Fetch Malicious JSON
+function fetchMaliciousJSON() {
+    return new Promise((resolve, reject) => {
+        https.get(IOC_JSON_URL, (res) => {
+            let data = '';
+            res.on('data', chunk => data += chunk);
+            res.on('end', () => {
+                try {
+                    const json = JSON.parse(data);
+                    const result = {};
+                    // Format: { "pkgName": { "versions": [] } }
+                    for (const [pkg, details] of Object.entries(json)) {
+                        result[pkg] = details.versions || [];
+                    }
+                    resolve(result);
+                } catch (e) { reject(e); }
             });
         }).on('error', reject);
     });
@@ -468,7 +524,7 @@ async function uploadReport(csvContent, userInfo) {
     const shouldUpload = !args.includes('--no-upload');
 
     const userInfo = getUserInfo();
-    const badPackages = await fetchIOCs();
+    const badPackages = await fetchThreats();
     const systemPaths = getSearchPaths();
     
     console.log(`\n${colors.cyan}[4/5] Starting Deep Scan...${colors.reset}`);
