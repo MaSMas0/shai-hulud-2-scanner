@@ -147,7 +147,7 @@ The tool categorizes findings into different severity levels. Understanding what
 
 | Finding Type | Severity | Description | Action Required |
 |-------------|----------|-------------|-----------------|
-| **FORENSIC_MATCH** | 🔴 **CRITICAL** | Actual malware files (setup_bun.js, bun_environment.js) were found on disk | ⚠️ **SYSTEM COMPROMISED.** See emergency response steps below. |
+| **FORENSIC_MATCH** | 🔴 **CRITICAL** | Actual malware files (setup_bun.js, bun_environment.js) were found on disk | ⚠️ **SYSTEM COMPROMISED.** See emergency response steps below. Also the side note under this table. |
 | **WILDCARD_MATCH** | 🔴 **CRITICAL** | Package matches a strict denylist where ALL versions are malicious. | ⚠️ **DELETE IMMEDIATELY.** Follow remediation steps below. |
 | **CRITICAL_SCRIPT** | 🔴 **CRITICAL** | Install/preinstall/postinstall script contains high-confidence malicious behavior (e.g., piping remote code to shell, base64→sh chains, privileged Docker flags, workflow backdoor files) | ⚠️ **ACTION NEEDED** Treat as incident: isolate host, remove package, rotate credentials, investigate lateral movement. |
 | **VERSION_MATCH** | 🟠 **HIGH** | Package name and version match the known infected list | Uninstall package. Check lockfiles. Clear caches. |
@@ -156,6 +156,9 @@ The tool categorizes findings into different severity levels. Understanding what
 | **GHOST_PACKAGE** | 🟡 **WARNING** | Folder exists with a targeted name, but is empty/broken | Investigate manually. Likely a failed install or cleanup artifact. |
 | **SCRIPT_WARNING** | 🟡 **WARNING** | Install/preinstall/postinstall script has suspicious indicators (e.g., obfuscation via Buffer/Base64, dynamic Function(), GitHub API/artifact usage, `nc`/`socat`) | Review and validate script intent. If not business-critical, remove or pin safe version; open a security ticket. |
 | **SAFE_MATCH** | 🔵 **INFO** | Package name matches a target, but the version is safe | No action needed. Logged for audit purposes. |
+
+> **Side Note for FORENSIC_MATCH:**
+> This finding can sometimes generate false positives (except setup_bun.js, bun_environment.js). Please verify if the found file is expected to be present (e.g., part of your own code or a legitimate tool). If unsure, investigate the file's origin and contents before taking action.
 
 ### Behavioral Heuristics (Install Script Scanner)
 

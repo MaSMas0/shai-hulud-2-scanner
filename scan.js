@@ -111,11 +111,9 @@ const MALWARE_FILES = Object.freeze([
     'cloud.json',
     'contents.json',
     'environment.json',
-    'actionsSecrets.json'
-]);
-
-// Pre-compute lowercase versions for case-insensitive matching
-const MALWARE_FILES_LOWER = new Set(MALWARE_FILES.map(f => f.toLowerCase()));
+    'actionsSecrets.json',
+    '.github/workflows/discussion.yaml',
+];
 
 // ============================================================================
 // HEURISTIC CONFIGURATION (ReDoS-hardened patterns)

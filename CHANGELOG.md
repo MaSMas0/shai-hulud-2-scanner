@@ -114,6 +114,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed a bug where the script would stop if `mallwareFile` was found for that directory and it will not scan for heuristics and metadata
 
+### Changed
+
+- **Malware File List Update:**
+  - Added a new file to the list of detected malware payloads for improved coverage. `.github/workflows/discussion.yaml` according to https://www.wiz.io/blog/shai-hulud-2-0-ongoing-supply-chain-attack can be created by Shai-Hulud.
+
+### Documentation
+
+- **False Positive Guidance:**
+  - Added a side note in the README to warn users that FORENSIC_MATCH can sometimes generate false positives, advising verification of found files.
+
 ## [1.3.1] - 2025-11-30
 
 ### Fixed
