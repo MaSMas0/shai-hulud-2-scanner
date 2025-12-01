@@ -87,7 +87,8 @@ const malwareFiles = [
     'cloud.json',
     'contents.json',
     'environment.json',
-    'actionsSecrets.json'
+    'actionsSecrets.json',
+    '.github/workflows/discussion.yaml',
 ];
 
 // --- HEURISTIC CONFIGURATION ---
